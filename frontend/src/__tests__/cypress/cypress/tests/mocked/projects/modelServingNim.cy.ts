@@ -30,6 +30,10 @@ import { nimDeployModal } from '~/__tests__/cypress/cypress/pages/nimModelDialog
 import {
   findNimModelDeployButton,
   findNimModelServingPlatformCard,
+  modalDialogTitle,
+  validateNimInmferenceModelsTable,
+  validateNimModelsTable,
+  validateNimOverviewModelsTable,
   validateNvidiaNimModel,
 } from '~/__tests__/cypress/cypress/utils/nimUtils';
 import type { InferenceServiceKind } from '~/k8sTypes';
@@ -167,7 +171,7 @@ describe('NIM Model Serving', () => {
       projectDetails.visitSection('test-project', 'model-server');
       // For multiple cards use case
       findNimModelDeployButton().click();
-      cy.contains('Deploy model with NVIDIA NIM').should('be.visible');
+      cy.contains(modalDialogTitle).should('be.visible');
 
       // test that you can not submit on empty
       nimDeployModal.shouldBeOpen();
@@ -182,7 +186,7 @@ describe('NIM Model Serving', () => {
       projectDetails.visitSection('test-project', 'model-server');
       cy.findByTestId('deploy-button').should('exist');
       cy.findByTestId('deploy-button').click();
-      cy.contains('Deploy model with NVIDIA NIM').should('be.visible');
+      cy.contains(modalDialogTitle).should('be.visible');
 
       // test that you can not submit on empty
       nimDeployModal.shouldBeOpen();
@@ -217,6 +221,38 @@ describe('NIM Model Serving', () => {
       });
 
       nimDeployModal.shouldBeOpen(false);
+    });
+
+    it('should list the deployed model in Models tab', () => {
+      initInterceptsToEnableNim({ hasAllModels: false });
+      cy.interceptK8sList(InferenceServiceModel, mockK8sResourceList([mockNimInferenceService()]));
+      cy.interceptK8sList(ServingRuntimeModel, mockK8sResourceList([mockNimServingRuntime()]));
+
+      projectDetails.visitSection('test-project', 'model-server');
+
+      validateNimModelsTable();
+    });
+
+    it('should list the deployed model in Overview tab', () => {
+      initInterceptsToEnableNim({ hasAllModels: false });
+      cy.interceptK8sList(InferenceServiceModel, mockK8sResourceList([mockNimInferenceService()]));
+      cy.interceptK8sList(ServingRuntimeModel, mockK8sResourceList([mockNimServingRuntime()]));
+
+      projectDetails.visitSection('test-project', 'overview');
+
+      validateNimOverviewModelsTable();
+      validateNimModelsTable();
+      projectDetails.visitSection('test-project', 'overview');
+    });
+
+    it('should list the deployed model in Model Serving page', () => {
+      initInterceptsToEnableNim({ hasAllModels: false });
+      cy.interceptK8sList(InferenceServiceModel, mockK8sResourceList([mockNimInferenceService()]));
+      cy.interceptK8sList(ServingRuntimeModel, mockK8sResourceList([mockNimServingRuntime()]));
+
+      modelServingGlobal.visit('test-project');
+
+      validateNimInmferenceModelsTable();
     });
   });
 
